@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,9 +13,12 @@ public class Player : MonoBehaviour
     [SerializeField] private float _cadenceTir = 0.5f;
     
     [SerializeField] private int _viesJoueur = 3;
+    [SerializeField] private GameObject _shield = default(GameObject);  
     public int ViesJoueur => _viesJoueur;
 
     private float _delai = -1;
+    private Animator _animator;
+    [SerializeField] private AudioClip _sonLaser = default;
 
     private void Awake()
     {
@@ -28,6 +32,12 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        _animator = GetComponent<Animator>();
+       
+    }
+
     private void Update()
     {
         MouvementsJoueur();
@@ -35,6 +45,9 @@ public class Player : MonoBehaviour
         {
             Instantiate(_laserJoueur, transform.position + new Vector3(0f, 1.11f, 0f), Quaternion.identity);
             _delai= Time.time + _cadenceTir;
+            AudioSource.PlayClipAtPoint(_sonLaser, Camera.main.transform.position, 0.5f);
+            
+
         }
 
     }
@@ -59,16 +72,47 @@ public class Player : MonoBehaviour
         {
             transform.position = new Vector3(10f, transform.position.y, 0f);
         }
+
+        if (direction.x > 0f)
+        {
+            _animator.SetBool("TurnRight", true);
+            //_animator.SetBool("TurnLeft", false);
+        }
+        else if(direction.x < 0f)
+        {
+            _animator.SetBool("TurnLeft", true);
+            //_animator.SetBool("TurnRight", false);
+        }
+        else
+        {
+            _animator.SetBool("TurnRight", false);
+            _animator.SetBool("TurnLeft", false);
+        }
     }
 
     public void Dommage()
     {
-        _viesJoueur--;
-        UIManager uiManager = FindObjectOfType<UIManager>();
-        uiManager.ChangeLivesDisplayImage(_viesJoueur);
+
+        if (!_shield.activeSelf)
+        {
+            _viesJoueur--;
+            UIManager uiManager = FindObjectOfType<UIManager>();
+            uiManager.ChangeLivesDisplayImage(_viesJoueur);
+        }
+        else
+        {
+            _shield.SetActive(false);
+        }
+
+        
         if (_viesJoueur <= 0)
         {
             Destroy(gameObject);
         }
+    }
+
+    public void ActiverShield()
+    {
+        _shield.SetActive(true);
     }
 }
